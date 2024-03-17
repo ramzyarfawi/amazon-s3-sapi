@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="upload-fileFlow" doc:id="e6763996-a49d-4676-bd17-7c6d56c1d444" >
+		<ee:transform doc:name="init data" doc:id="78b7d3b8-980d-49fb-a511-d3e3008c8fda" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="fileContent" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.parts."fileName".content]]></ee:set-variable>
+				<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.parts."fileName"."headers"."Content-Disposition".filename]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-variable value="#[attributes.queryParams.bucketName]" doc:name="Set bucketName" doc:id="90f9dfa9-2473-4114-8397-9efaafe352ee" variableName="bucketName" />
+		<s3:list-buckets doc:name="List Buckets" doc:id="a8fb5ef1-cac9-403d-9c65-ae16a45d2dd0" config-ref="Amazon_S3_Configuration"/>
+		<set-payload value="#[payload.buckets flatMap ((item, index) -&gt; item.name)]" doc:name="buckets" doc:id="4a29432f-af48-46eb-9b8d-7adf66788c8c" />
+		<choice doc:name="hasBuckets" doc:id="2905e0af-2a5f-424d-a002-92f5c67bd2e4" >
+			<when expression="#[!(payload contains(vars.bucketName))]">
+				<s3:create-bucket doc:name="Create Bucket" doc:id="f838b31d-8035-4097-aa62-eae22b494bea" config-ref="Amazon_S3_Configuration" bucketName="#[vars.bucketName]"/>
+			</when>
+		</choice>
+		<set-variable value="#[%dw 2.0&#10;output application/java&#10;import * from dw::core::Strings&#10;import * from dw::util::Coercions&#10;var localTime = now() &gt;&gt; &quot;Europe/Paris&quot;&#10;var formattedLocalTime = localTime as String {format: &quot;yyyyMMdd_HH'h'mm&quot;}&#10;&#10;---&#10;&#10;formattedLocalTime ++ &quot;_&quot; ++ (vars.fileName default &quot;file&quot;)]" doc:name="Set fileName" doc:id="6afe9c91-352e-497b-98cf-9e68d5b58e72" variableName="fileName"/>
+		<s3:put-object doc:name="upload file" doc:id="d6d88c99-0f69-45ab-9d08-a7d6dfe297b9" config-ref="Amazon_S3_Configuration" bucketName="#[vars.bucketName]" key="#[vars.fileName]">
+			<s3:content ><![CDATA[#[vars.fileContent]]]></s3:content>
+		</s3:put-object>
+		<logger level="INFO" doc:name="Logger" doc:id="a92ac9cc-49f5-4651-952f-be1869668a3a" />
+	</flow>
+</mule>

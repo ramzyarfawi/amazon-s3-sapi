@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="1ef862bf-a2b7-4e00-bbd6-d0c41095fa99" >
+		<s3:connection accessKey="${secure::s3.accessKey}" secretKey="${secure::s3.secretKey}" region="eu-west-1"/>
+	</s3:config>
+	<global-property doc:name="Global Property" doc:id="a0972c72-d96e-454e-b10b-7eba3a918ef4" name="env" value="local" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="5d259450-7a52-4c44-b94d-ce7bebdbfe29" file="config/${env}-secure-properties.yaml" key="${config.key}" />
+	<configuration-properties doc:name="Configuration properties" doc:id="f0a86b3d-7ae7-4ed9-8284-73495ed23aa7" file="config/${env}-properties.yaml" />
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="30b799cc-c7fc-45bf-9f13-ffd21fcf0200" flowRef="amazon-s3-system-api-main" />
+</mule>
