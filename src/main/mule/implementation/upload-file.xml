@@ -18,7 +18,8 @@ payload]]></ee:set-payload>
 				<ee:set-variable variableName="fileContent" ><![CDATA[%dw 2.0
 output application/java
 ---
-payload.parts."fileName".content]]></ee:set-variable>
+payload
+//payload.parts."fileName".content]]></ee:set-variable>
 				<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
 output application/java
 ---
